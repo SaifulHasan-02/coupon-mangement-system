@@ -10,10 +10,10 @@ import java.util.Map;
 import java.util.Optional;
 
 
-public class BxGyStrategy implements CouponStrategy{
+public class BxGyStrategy extends CouponStrategy{
 
     @Override
-    public boolean isApplicable(Cart cart, Coupon coupon) {
+    public boolean validate(Cart cart, Coupon coupon) {
         Map<String, Object> details = coupon.getDetails();
         JSONObject jsonObject = (JSONObject) details.get("details");
         JSONArray buyProdArray = jsonObject.getJSONArray("buy_products");
@@ -42,7 +42,7 @@ public class BxGyStrategy implements CouponStrategy{
     }
 
     @Override
-    public double discount(Cart cart, Coupon coupon) {
+    public double applyDiscount(Cart cart, Coupon coupon) {
         Map<String, Object> details = coupon.getDetails();
         JSONObject jsonObject = (JSONObject) details.get("details");
         JSONArray buyProdArray = jsonObject.getJSONArray("buy_products");
@@ -88,10 +88,13 @@ public class BxGyStrategy implements CouponStrategy{
 
             // find product in the cart
             Item targetItem = null;
-            for (Item item : cart.getItems()) {
-                if (item.getId() == productId) {
-                    targetItem = item;
+            int ind = -1;
+            for(int j = 0; j < cart.getItems().size(); j++){
+                if(cart.getItems().get(j).getId() == productId){
+                    targetItem = cart.getItems().get(j);
+                    ind = j;
                     break;
+
                 }
             }
 
@@ -102,7 +105,10 @@ public class BxGyStrategy implements CouponStrategy{
                 );
 
                 // discount equals the total price of free items
-                discount += applicableFreeQty * targetItem.getPrice();
+                double productDiscount = applicableFreeQty * targetItem.getPrice();
+                cart.getItems().get(ind).setDiscount(productDiscount);
+                discount += productDiscount;
+
             }
         }
 

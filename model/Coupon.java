@@ -3,6 +3,8 @@ package com.coupons.management.coupons.model;
 import java.util.Date;
 import java.util.Map;
 
+import static com.coupons.management.coupons.constant.Constant.ACTIVE;
+
 public class Coupon {
     private Long id;
     private String type; // "cart-wise", "product-wise", "bxgy"
@@ -50,5 +52,12 @@ public class Coupon {
 
     public void setExpiry(Date expiry) {
         this.expiry = expiry;
+    }
+
+    public boolean isCouponValid() {
+        Date exp = this.getExpiry();
+        Date now = new Date();
+        return ACTIVE.equalsIgnoreCase(this.getStatus()) &&
+                (exp == null || now.before(exp));
     }
 }

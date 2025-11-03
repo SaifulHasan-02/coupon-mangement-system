@@ -6,7 +6,7 @@ import java.util.Map;
 
 public interface CouponApplyService {
 
-    public Map<String, Object> isCouponApplicable(Cart cart);
+    public Map<String, Object> couponApplicable(Cart cart);
 
-    public double getDiscount(long id, Cart cart);
+    public Map<String, Object> getDiscount(long id, Cart cart);
 }

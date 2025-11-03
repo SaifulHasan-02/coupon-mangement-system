@@ -17,12 +17,12 @@ public class CouponApplyController {
     @Autowired
     CouponApplyService couponApplyService;
     @PostMapping("/applicable-coupons")
-    public Map<String, Object> isCouponApplicable(@RequestBody Cart cart){
-        return couponApplyService.isCouponApplicable(cart);
+    public Map<String, Object> couponApplicable(@RequestBody Cart cart){
+        return couponApplyService.couponApplicable(cart);
     }
 
     @PostMapping("/apply-coupon/{id}")
-    public double getDiscount(@PathVariable Long id, @RequestBody Cart cart){
+    public Map<String, Object> getDiscount(@PathVariable Long id, @RequestBody Cart cart){
         return couponApplyService.getDiscount(id, cart);
     }
 }

@@ -6,10 +6,10 @@ import org.json.JSONObject;
 
 import java.util.Map;
 
-public class CartWiseStrategy implements CouponStrategy{
+public class CartWiseStrategy extends CouponStrategy{
 
     @Override
-    public boolean isApplicable(Cart cart, Coupon coupon) {
+    public boolean validate(Cart cart, Coupon coupon) {
         Map<String, Object> details = coupon.getDetails();
         JSONObject jsonObject  = (JSONObject) details.get("details");
         int threshold = jsonObject.getInt("threshold");
@@ -18,11 +18,15 @@ public class CartWiseStrategy implements CouponStrategy{
     }
 
     @Override
-    public double discount(Cart cart, Coupon coupon) {
+    public double applyDiscount(Cart cart, Coupon coupon) {
         Map<String, Object> details = coupon.getDetails();
         JSONObject jsonObject  = (JSONObject) details.get("details");
         int discount = jsonObject.getInt("discount");
         double total = cart.getTotal();
-        return (total * discount) / 100;
+        double productDiscount = total * discount / 100;
+        for(int i = 0; i < cart.getItems().size(); i++){
+            cart.getItems().get(i).setDiscount(productDiscount);
+        }
+        return productDiscount;
     }
 }

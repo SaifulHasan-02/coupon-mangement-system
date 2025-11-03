@@ -7,6 +7,8 @@ public class Item {
     private double price;
     private int quantity;
 
+    private double discount;
+
     public Long getId() {
         return id;
     }
@@ -45,5 +47,13 @@ public class Item {
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    public double getDiscount() {
+        return discount;
+    }
+
+    public void setDiscount(double discount) {
+        this.discount = discount;
     }
 }
