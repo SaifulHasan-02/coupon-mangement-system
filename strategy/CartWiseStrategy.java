@@ -2,7 +2,6 @@ package com.coupons.management.coupons.strategy;
 
 import com.coupons.management.coupons.model.Cart;
 import com.coupons.management.coupons.model.Coupon;
-import org.apache.tomcat.util.json.JSONFilter;
 import org.json.JSONObject;
 
 import java.util.Map;

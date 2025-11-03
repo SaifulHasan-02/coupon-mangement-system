@@ -15,7 +15,7 @@ public class CouponRegistry {
     }
 
 
-    public  CouponStrategy getStrategy(String type) {
+    public CouponStrategy getStrategy(String type) {
        return this.map.get(type);
     }
 }
