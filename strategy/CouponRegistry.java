@@ -3,7 +3,7 @@ package com.coupons.management.coupons.strategy;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.coupons.management.coupons.Constant.Constant.*;
+import static com.coupons.management.coupons.constant.Constant.*;
 
 public class CouponRegistry {
 

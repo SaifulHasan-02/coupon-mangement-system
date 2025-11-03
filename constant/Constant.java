@@ -1,4 +1,4 @@
-package com.coupons.management.coupons.Constant;
+package com.coupons.management.coupons.constant;
 
 public class Constant {
 
