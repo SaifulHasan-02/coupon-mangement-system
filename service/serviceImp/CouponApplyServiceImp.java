@@ -2,7 +2,6 @@ package com.coupons.management.coupons.service.serviceImp;
 
 import com.coupons.management.coupons.model.Cart;
 import com.coupons.management.coupons.model.Coupon;
-import com.coupons.management.coupons.model.Item;
 import com.coupons.management.coupons.service.CouponApplyService;
 import com.coupons.management.coupons.strategy.CouponRegistry;
 import com.coupons.management.coupons.strategy.CouponStrategy;
@@ -17,7 +16,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.coupons.management.coupons.constant.Constant.*;
 
 public class CouponApplyServiceImp implements CouponApplyService {
     private final static Logger logger = LoggerFactory.getLogger(CouponApplyServiceImp.class);
