@@ -1,10 +1,13 @@
 package com.coupons.management.coupons.strategy;
 
+import org.springframework.stereotype.Service;
+
 import java.util.HashMap;
 import java.util.Map;
 
 import static com.coupons.management.coupons.constant.Constant.*;
 
+@Service("CouponRegistry")
 public class CouponRegistry {
 
     private final Map<String, CouponStrategy> map = new HashMap<>();
@@ -16,7 +19,7 @@ public class CouponRegistry {
     }
 
     public Map<String, CouponStrategy> getMap() {
-        return map;
+        return Map.copyOf(map);
     }
 
     public CouponStrategy getStrategy(String type) {

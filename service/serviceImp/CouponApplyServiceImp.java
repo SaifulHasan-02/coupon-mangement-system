@@ -10,13 +10,14 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
+@Service("CouponApplyService")
 public class CouponApplyServiceImp implements CouponApplyService {
     private final static Logger logger = LoggerFactory.getLogger(CouponApplyServiceImp.class);
 
@@ -24,11 +25,13 @@ public class CouponApplyServiceImp implements CouponApplyService {
     CouponRegistry couponRegistry;
     @Autowired
     CouponServiceImp couponServiceImp;
+
     @Override
     public Map<String, Object> couponApplicable(Cart cart) {
         logger.debug("isCouponApplicable is started in CouponApplyServiceImp...");
         Map<String, Object> response = new HashMap<>();
-        try{
+        try {
+            logger.debug("Cart is: {}", cart);
             JSONArray jsonArray = new JSONArray();
             List<Coupon> couponList = couponServiceImp.getAllCoupons();
             List<Coupon> validCoupons = getValidCoupons(couponList);
@@ -36,7 +39,7 @@ public class CouponApplyServiceImp implements CouponApplyService {
             logger.debug("Valid Coupon List is: {}", validCoupons);
             fetchCouponDiscount(cart, validCoupons, jsonArray);
             response.put("applicable_coupons", jsonArray);
-        } catch (Exception e){
+        } catch (Exception e) {
             logger.error("Exception occurred while getting coupon discount.", e);
         }
         logger.debug("Total discount response is: {}", response);
@@ -44,22 +47,24 @@ public class CouponApplyServiceImp implements CouponApplyService {
         return response;
     }
 
-    private List<Coupon> getValidCoupons(List<Coupon> couponList){
+    private List<Coupon> getValidCoupons(List<Coupon> couponList) {
         List<Coupon> validCouponList = new ArrayList<>();
-        for(Coupon coupon : couponList){
-            if(coupon.isCouponValid()){
+        for (Coupon coupon : couponList) {
+            if (coupon.isCouponValid()) {
                 validCouponList.add(coupon);
             }
         }
         return validCouponList;
     }
+
     private void fetchCouponDiscount(Cart cart, List<Coupon> couponList, JSONArray jsonArray) {
-        logger.debug("fetchCouponDiscount is started in CouponApplyServiceImp...");
+        logger.info("fetchCouponDiscount is started in CouponApplyServiceImp...");
         JSONObject jsonObject = new JSONObject();
         Map<String, CouponStrategy> couponStrategies = couponRegistry.getMap();
-        for(Coupon coupon : couponList){
-            for(CouponStrategy couponStrategy : couponStrategies.values()){
-                if(couponStrategy.isApplicable(cart, coupon)){
+        logger.info("couponStrategies is: {}", couponStrategies);
+        for (Coupon coupon : couponList) {
+            for (CouponStrategy couponStrategy : couponStrategies.values()) {
+                if (couponStrategy.isApplicable(cart, coupon)) {
                     double discountAmtForCoupon = couponStrategy.applyDiscount(cart, coupon);
                     jsonObject.put("coupon_id", coupon.getId());
                     jsonObject.put("type", coupon.getType());
@@ -70,8 +75,9 @@ public class CouponApplyServiceImp implements CouponApplyService {
             }
 
         }
-        logger.debug("fetchCouponDiscount is ended in CouponApplyServiceImp...");
+        logger.info("fetchCouponDiscount is ended in CouponApplyServiceImp...");
     }
+
 
     @Override
     public Map<String, Object> getDiscount(long id, Cart cart) {
@@ -79,7 +85,7 @@ public class CouponApplyServiceImp implements CouponApplyService {
         Coupon coupon = couponServiceImp.getCouponById(id);
         CouponStrategy couponStrategy = couponRegistry.getStrategy(coupon.getType());
         boolean isApplicable = couponStrategy.isApplicable(cart, coupon);
-        if(isApplicable){
+        if (isApplicable) {
             double discount = couponStrategy.applyDiscount(cart, coupon);
         }
         JSONObject jsonObject = new JSONObject();

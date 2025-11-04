@@ -23,9 +23,11 @@ public class CouponServiceImp implements CouponService {
                 throw new IllegalArgumentException("Missing required fields: 'type' and 'details'");
             }
             String type =  requestInputs.get("type").toString();
+            String status = requestInputs.get("status").toString();
+            Date exp = (Date) requestInputs.get("date");
             Map<String, Object> details = (Map<String, Object>) requestInputs.get("details");
             long newId = idCounter.getAndIncrement();
-            Coupon coupon = createPayloadForCoupon(newId, type, details);
+            Coupon coupon = createPayloadForCoupon(newId, type, status, exp, details);
             couponStore.put(newId, coupon);
             logger.info("Coupon created successfully with ID: {}", newId);
             return coupon;
@@ -113,11 +115,13 @@ public class CouponServiceImp implements CouponService {
             throw e;
         }
     }
-    private Coupon createPayloadForCoupon(Long newId, String type, Map<String, Object> details){
+    private Coupon createPayloadForCoupon(Long newId, String type, String status, Date date, Map<String, Object> details){
         Coupon coupon = new Coupon();
-        coupon.setType(type);
-        coupon.setDetails(details);
         coupon.setId(newId);
+        coupon.setType(type);
+        coupon.setStatus(status);
+        coupon.setExpiry(date);
+        coupon.setDetails(details);
         return coupon;
     }
 
