@@ -20,4 +20,11 @@ public class Cart {
         }
         return sum;
     }
+
+    @Override
+    public String toString() {
+        return "Cart{" +
+                "items=" + items +
+                '}';
+    }
 }

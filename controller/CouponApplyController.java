@@ -1,7 +1,8 @@
 package com.coupons.management.coupons.controller;
 
 import com.coupons.management.coupons.model.Cart;
-import com.coupons.management.coupons.model.Item;
+import com.coupons.management.coupons.model.CouponApplicableResponse;
+import com.coupons.management.coupons.model.UpdatedCartResponse;
 import com.coupons.management.coupons.service.CouponApplyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,12 +18,12 @@ public class CouponApplyController {
     @Autowired
     CouponApplyService couponApplyService;
     @PostMapping("/applicable-coupons")
-    public Map<String, Object> couponApplicable(@RequestBody Cart cart){
+    public CouponApplicableResponse couponApplicable(@RequestBody Cart cart){
         return couponApplyService.couponApplicable(cart);
     }
 
     @PostMapping("/apply-coupon/{id}")
-    public Map<String, Object> getDiscount(@PathVariable Long id, @RequestBody Cart cart){
+    public UpdatedCartResponse getDiscount(@PathVariable Long id, @RequestBody Cart cart){
         return couponApplyService.getDiscount(id, cart);
     }
 }

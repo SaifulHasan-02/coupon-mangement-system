@@ -18,4 +18,5 @@ public abstract class CouponStrategy {
 
         return validate(cart, coupon);
     }
+
 }

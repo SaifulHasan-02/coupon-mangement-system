@@ -3,115 +3,139 @@ package com.coupons.management.coupons.strategy;
 import com.coupons.management.coupons.model.Cart;
 import com.coupons.management.coupons.model.Coupon;
 import com.coupons.management.coupons.model.Item;
+import com.coupons.management.coupons.service.serviceImp.CouponApplyServiceImp;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+
+import static com.coupons.management.coupons.constant.Constant.BxGy_TYPE_COUPON;
 
 
-public class BxGyStrategy extends CouponStrategy{
+public class BxGyStrategy extends CouponStrategy {
+    private final static Logger logger = LoggerFactory.getLogger(BxGyStrategy.class);
+
 
     @Override
     public boolean validate(Cart cart, Coupon coupon) {
+        if (!BxGy_TYPE_COUPON.equalsIgnoreCase(coupon.getType())) {
+            return false;
+        }
+
         Map<String, Object> details = coupon.getDetails();
-        JSONObject jsonObject = (JSONObject) details.get("details");
-        JSONArray buyProdArray = jsonObject.getJSONArray("buy_products");
-        int repetitionLimit = jsonObject.getInt("repition_limit");
 
-        int buyCount = 0;
-        for (int i = 0; i < buyProdArray.length(); i++) {
-            JSONObject buy = buyProdArray.getJSONObject(i);
-            long productId = buy.getLong("product_id");
-            int requiredQty = buy.getInt("quantity");
+        List<Map<String, Object>> buyProdList = (List<Map<String, Object>>) details.get("buy_products");
+        Object repetitionLimitObj = details.get("repition_limit"); // fixed key spelling
+        int repetitionLimit = repetitionLimitObj != null ? Integer.parseInt(repetitionLimitObj.toString()) : 1;
 
-            // count how many such items in the cart
+        int buyCount = Integer.MAX_VALUE; // we will take the min across products (complete set availability)
+
+        for (Map<String, Object> buy : buyProdList) {
+            long productId = Long.parseLong(buy.get("product_id").toString());
+            int requiredQty = Integer.parseInt(buy.get("quantity").toString());
+
+            // count how many such items are in the cart
             int itemCount = 0;
-            for(Item item : cart.getItems()){
-                if(item.getId() == productId){
+            for (Item item : cart.getItems()) {
+                if (item.getId() == productId) {
                     itemCount = item.getQuantity();
                     break;
                 }
             }
-            buyCount += itemCount / requiredQty;
 
+            // find how many full sets this product contributes
+            int fullSets = itemCount / requiredQty;
+            buyCount = Math.min(buyCount, fullSets);
         }
 
-        // Check if at least one full buy set exists
-        return buyCount > 0 && repetitionLimit > 0;
+        boolean isValid = buyCount > 0 && buyCount <= repetitionLimit;
+
+        logger.info("BxGy Validation for coupon {}: buyCount={}, repetitionLimit={}, result={}",
+                coupon.getId(), buyCount, repetitionLimit, isValid);
+
+        return isValid;
     }
+
 
     @Override
     public double applyDiscount(Cart cart, Coupon coupon) {
         Map<String, Object> details = coupon.getDetails();
-        JSONObject jsonObject = (JSONObject) details.get("details");
-        JSONArray buyProdArray = jsonObject.getJSONArray("buy_products");
-        JSONArray getProdArray = jsonObject.getJSONArray("get_products");
-        int repetitionLimit = jsonObject.getInt("repition_limit");
 
-        // STEP 1: calculate how many "buy sets" the cart qualifies for
+        List<Map<String, Object>> buyProdList = (List<Map<String, Object>>) details.get("buy_products");
+        List<Map<String, Object>> getProdList = (List<Map<String, Object>>) details.get("get_products");
+        int repetitionLimit = Integer.parseInt(details.get("repition_limit").toString());
+
+        // STEP 1: calculate how many full "buy sets" the cart qualifies for
         int totalSets = Integer.MAX_VALUE;
 
-        for (int i = 0; i < buyProdArray.length(); i++) {
-            JSONObject buy = buyProdArray.getJSONObject(i);
-            long productId = buy.getLong("product_id");
-            int requiredQty = buy.getInt("quantity");
+        for (Map<String, Object> buy : buyProdList) {
+            long productId = Long.parseLong(buy.get("product_id").toString());
+            int requiredQty = Integer.parseInt(buy.get("quantity").toString());
 
             int itemCount = 0;
-            for(Item item : cart.getItems()){
-                if(item.getId() == productId){
+            for (Item item : cart.getItems()) {
+                if (item.getId() == productId) {
                     itemCount = item.getQuantity();
                     break;
                 }
             }
 
             int sets = itemCount / requiredQty;
+            logger.info("sets is {}", sets);
             totalSets = Math.min(totalSets, sets);
         }
 
         // Apply repetition limit
+        logger.info("totalSets is {}", totalSets);
         int timesApplicable = Math.min(totalSets, repetitionLimit);
 
-        if (timesApplicable <= 0) return 0.0;
+        if (timesApplicable <= 0) {
+            logger.info("BxGy not applicable — no complete buy sets found for coupon ID {}", coupon.getId());
+            return 0.0;
+        }
 
-        return calculateDiscount(cart, getProdArray, timesApplicable);
+        double discount = calculateDiscount(cart, getProdList, timesApplicable);
+
+        logger.info("BxGy discount applied for coupon ID {}: Total discount = {}", coupon.getId(), discount);
+        return discount;
     }
 
-    private static double calculateDiscount(Cart cart, JSONArray getProdArray, int timesApplicable) {
-        // STEP 2: find free (get) items in cart
+
+    private static double calculateDiscount(Cart cart, List<Map<String, Object>> getProdList, int timesApplicable) {
         double discount = 0.0;
 
-        for (int i = 0; i < getProdArray.length(); i++) {
-            JSONObject get = getProdArray.getJSONObject(i);
-            long productId = get.getLong("product_id");
-            int getQty = get.getInt("quantity");
+        for (Map<String, Object> get : getProdList) {
+            long productId = Long.parseLong(get.get("product_id").toString());
+            int getQty = Integer.parseInt(get.get("quantity").toString());
 
             // find product in the cart
-            Item targetItem = null;
-            int ind = -1;
-            for(int j = 0; j < cart.getItems().size(); j++){
-                if(cart.getItems().get(j).getId() == productId){
-                    targetItem = cart.getItems().get(j);
-                    ind = j;
+            for (Item item : cart.getItems()) {
+                if (item.getId() == productId) {
+                    int applicableFreeQty = Math.min(item.getQuantity(), getQty * timesApplicable);
+
+                    double productDiscount = applicableFreeQty * item.getPrice();
+                    item.setDiscount(item.getDiscount() + productDiscount); // accumulate if multiple coupons apply
+                    discount += productDiscount;
+
+                    logger.debug(
+                            "Applied BxGy discount on product ID {}: freeQty={}, price={}, discount={}",
+                            productId, applicableFreeQty, item.getPrice(), productDiscount
+                    );
+
                     break;
-
                 }
-            }
-
-            if (targetItem != null) {
-                int applicableFreeQty = Math.min(
-                        targetItem.getQuantity(),
-                        getQty * timesApplicable
-                );
-
-                // discount equals the total price of free items
-                double productDiscount = applicableFreeQty * targetItem.getPrice();
-                cart.getItems().get(ind).setDiscount(productDiscount);
-                discount += productDiscount;
-
             }
         }
 
         return discount;
+    }
+
+
+    @Override
+    public String toString() {
+        return "BxGyStrategy{}";
     }
 }

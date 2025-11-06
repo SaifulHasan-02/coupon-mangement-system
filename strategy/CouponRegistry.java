@@ -19,7 +19,7 @@ public class CouponRegistry {
     }
 
     public Map<String, CouponStrategy> getMap() {
-        return Map.copyOf(map);
+        return this.map;
     }
 
     public CouponStrategy getStrategy(String type) {

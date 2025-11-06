@@ -1,7 +1,6 @@
 package com.coupons.management.coupons.service.serviceImp;
 
-import com.coupons.management.coupons.model.Cart;
-import com.coupons.management.coupons.model.Coupon;
+import com.coupons.management.coupons.model.*;
 import com.coupons.management.coupons.service.CouponApplyService;
 import com.coupons.management.coupons.strategy.CouponRegistry;
 import com.coupons.management.coupons.strategy.CouponStrategy;
@@ -27,23 +26,24 @@ public class CouponApplyServiceImp implements CouponApplyService {
     CouponServiceImp couponServiceImp;
 
     @Override
-    public Map<String, Object> couponApplicable(Cart cart) {
+    public CouponApplicableResponse couponApplicable(Cart cart) {
         logger.debug("isCouponApplicable is started in CouponApplyServiceImp...");
-        Map<String, Object> response = new HashMap<>();
+        CouponApplicableResponse response = new CouponApplicableResponse();
         try {
             logger.debug("Cart is: {}", cart);
             JSONArray jsonArray = new JSONArray();
             List<Coupon> couponList = couponServiceImp.getAllCoupons();
             List<Coupon> validCoupons = getValidCoupons(couponList);
             //list of the valid or active coupon
-            logger.debug("Valid Coupon List is: {}", validCoupons);
-            fetchCouponDiscount(cart, validCoupons, jsonArray);
-            response.put("applicable_coupons", jsonArray);
+            logger.info("Valid Coupon List is: {}", validCoupons);
+            List<CouponDiscountResponse> applicableCoupons = new ArrayList<>();
+            fetchCouponDiscount(cart, validCoupons, applicableCoupons);
+            response.setApplicableCoupons(applicableCoupons);
         } catch (Exception e) {
             logger.error("Exception occurred while getting coupon discount.", e);
         }
-        logger.debug("Total discount response is: {}", response);
-        logger.debug("isCouponApplicable is ended in CouponApplyServiceImp...");
+        logger.info("Total discount response is: {}", response);
+        logger.info("isCouponApplicable is ended in CouponApplyServiceImp...");
         return response;
     }
 
@@ -57,40 +57,62 @@ public class CouponApplyServiceImp implements CouponApplyService {
         return validCouponList;
     }
 
-    private void fetchCouponDiscount(Cart cart, List<Coupon> couponList, JSONArray jsonArray) {
+    private void fetchCouponDiscount(Cart cart, List<Coupon> couponList, List<CouponDiscountResponse> applicableCoupons) {
         logger.info("fetchCouponDiscount is started in CouponApplyServiceImp...");
-        JSONObject jsonObject = new JSONObject();
         Map<String, CouponStrategy> couponStrategies = couponRegistry.getMap();
         logger.info("couponStrategies is: {}", couponStrategies);
+        System.out.println("couponStrategies.values(): "+couponStrategies.values());
         for (Coupon coupon : couponList) {
             for (CouponStrategy couponStrategy : couponStrategies.values()) {
                 if (couponStrategy.isApplicable(cart, coupon)) {
                     double discountAmtForCoupon = couponStrategy.applyDiscount(cart, coupon);
-                    jsonObject.put("coupon_id", coupon.getId());
-                    jsonObject.put("type", coupon.getType());
-                    jsonObject.put("discount", discountAmtForCoupon);
-                    logger.debug("Obj for coupon for coupon id: {} is: {}", coupon.getId(), jsonObject);
-                    jsonArray.put(jsonObject);
+                    logger.info("discountAmtForCoupon is : {}", discountAmtForCoupon);
+                    CouponDiscountResponse discountResponse = new CouponDiscountResponse();
+                    discountResponse.setCouponId(coupon.getId());
+                    discountResponse.setType(coupon.getType());
+                    discountResponse.setDiscount(discountAmtForCoupon);
+                    applicableCoupons.add(discountResponse);
+                    logger.debug("Added applicable coupon: {}", discountResponse);
                 }
             }
 
         }
+        logger.info("response is {}", applicableCoupons.size());
         logger.info("fetchCouponDiscount is ended in CouponApplyServiceImp...");
     }
 
 
     @Override
-    public Map<String, Object> getDiscount(long id, Cart cart) {
-        Map<String, Object> responseMap = new HashMap<>();
+    public UpdatedCartResponse getDiscount(long id, Cart cart) {
+        UpdatedCartResponse response = new UpdatedCartResponse();
         Coupon coupon = couponServiceImp.getCouponById(id);
+        if(coupon.getId() == null || coupon.getId() != id){
+            logger.warn("No coupon found for ID {}", id);
+            return null;
+        }
         CouponStrategy couponStrategy = couponRegistry.getStrategy(coupon.getType());
+        if(couponStrategy == null){
+            logger.warn("No coupon strategy for ID {}", id);
+            return null;
+        }
+        double totalPrice = cart.getItems().stream()
+                .mapToDouble(item -> item.getPrice() * item.getQuantity())
+                .sum();
+        double finalPrice = 0, totalDiscount = 0;
         boolean isApplicable = couponStrategy.isApplicable(cart, coupon);
         if (isApplicable) {
-            double discount = couponStrategy.applyDiscount(cart, coupon);
+            totalDiscount = couponStrategy.applyDiscount(cart, coupon);
+            finalPrice = totalPrice - totalDiscount;
+
         }
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("items", cart.getItems());
-        responseMap.put("updated_cart", jsonObject);
-        return responseMap;
+        CartSummary cartSummary = new CartSummary();
+        cartSummary.setItems(cart.getItems());
+        cartSummary.setTotalPrice(totalPrice);
+        cartSummary.setTotalDiscount(totalDiscount);
+        cartSummary.setFinalPrice(finalPrice);
+        response.setUpdatedCart(cartSummary);
+        logger.info("Response is: {}", response);
+        return response;
+
     }
 }

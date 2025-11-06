@@ -60,4 +60,15 @@ public class Coupon {
         return ACTIVE.equalsIgnoreCase(this.getStatus()) &&
                 (exp == null || now.before(exp));
     }
+
+    @Override
+    public String toString() {
+        return "Coupon{" +
+                "id=" + id +
+                ", type='" + type + '\'' +
+                ", status='" + status + '\'' +
+                ", expiry=" + expiry +
+                ", details=" + details +
+                '}';
+    }
 }
