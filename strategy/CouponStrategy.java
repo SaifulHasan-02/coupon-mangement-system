@@ -7,7 +7,6 @@ import com.coupons.management.coupons.model.Coupon;
 
 public abstract class CouponStrategy {
 
-
     public abstract boolean validate(Cart cart, Coupon coupon);
     public abstract double applyDiscount(Cart cart, Coupon coupon);
 
