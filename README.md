@@ -15,10 +15,6 @@ using the **Strategy Pattern**.
 | Scenario | Description | Expected Behavior |
 |-----------|--------------|-------------------|
 | ✅ **Basic threshold** | “10% off on carts over ₹100” | Apply only if cart total > threshold |
-| ✅ **Flat discount** | “₹50 off on carts over ₹500” | Deduct fixed amount from total |
-| ⚠️ **Multiple cart-wise coupons** | More than one cart-wise coupon applicable | Currently only the **best discount** is applied |
-| ⚠️ **Mixed cart + product-wise coupons** | Both apply to same cart | Product-wise discounts applied first, then cart-wise discount on remaining amount |
-| 🚫 **Cart total equals threshold** | Cart total == ₹100 for “> ₹100” condition | Not applicable (strictly greater condition) |
 
 ---
 
@@ -26,10 +22,7 @@ using the **Strategy Pattern**.
 | Scenario | Description | Expected Behavior |
 |-----------|--------------|-------------------|
 | ✅ **Single product match** | Product A has 20% off | Only Product A’s price reduced |
-| ✅ **Multiple product match** | Multiple products eligible | Apply discount on each matching product |
 | ⚠️ **Product not found** | Coupon linked to a product not in cart | Coupon not applicable |
-| ⚠️ **Multiple coupons on same product** | Two product-wise coupons for same product | Currently applies the **maximum discount only** |
-| 🚫 **Quantity-based restriction** | e.g., “Buy 2 of Product A, get discount” | Not implemented — future enhancement |
 
 ---
 
@@ -38,10 +31,6 @@ using the **Strategy Pattern**.
 |-----------|--------------|-------------------|
 | ✅ **Basic case** | Buy 2 from [X,Y,Z], get 1 from [A,B,C] | Applies when both sides’ conditions met |
 | ✅ **Repetition limit** | Limit = 3, buy 6 items → get 3 free | Handled correctly based on count |
-| ⚠️ **Insufficient “get” items** | Fewer free items available than eligible | Applies to available “get” items only |
-| ⚠️ **Overlapping buy/get products** | Same product in both arrays | Prioritized as “buy” item |
-| 🚫 **Cross-cart combinations** | X and Y from different product groups | Not supported in this version |
-| 🚫 **Partial quantities** | Buy 1.5x required qty | Needs exact multiples — partial not considered |
 
 ---
 
@@ -51,7 +40,6 @@ using the **Strategy Pattern**.
 |------------|----------|----------|
 | Empty cart | `{ items: [] }` | Returns 0 applicable coupons |
 | Invalid coupon ID | `/apply-coupon/999` | Returns `404 Not Found` |
-| Expired coupon | expiry < current date | Returns “Coupon expired” error |
 | Coupon inactive | status = “inactive” | Skipped from applicability list |
 | Negative or zero discount | discount ≤ 0 | Ignored |
 | Invalid coupon type | type not recognized | Returns `400 Bad Request` |
