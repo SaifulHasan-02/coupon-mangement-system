@@ -3,9 +3,7 @@ package com.coupons.management.coupons.strategy;
 import com.coupons.management.coupons.model.Cart;
 import com.coupons.management.coupons.model.Coupon;
 
-import java.util.Date;
 
-import static com.coupons.management.coupons.constant.Constant.*;
 
 public abstract class CouponStrategy {
 

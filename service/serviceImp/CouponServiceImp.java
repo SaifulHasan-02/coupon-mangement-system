@@ -120,7 +120,6 @@ public class CouponServiceImp implements CouponService {
         coupon.setId(newId);
         coupon.setType(type);
         coupon.setStatus(status);
-        coupon.setExpiry(date);
         coupon.setDetails(details);
         return coupon;
     }
